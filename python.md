@@ -301,7 +301,7 @@ print(add(3, 4))  # 7
 **Замыкание** — это функция, которая запоминает значения из охватывающей области видимости, даже если эта область видимости больше не существует.
 
 Пример:
-python
+```python
 
 def outer_function(x):
     def inner_function(y):
@@ -310,6 +310,7 @@ def outer_function(x):
 
 closure = outer_function(10)
 print(closure(5))  # 15
+```
 
 ### *19. Дескриптор (Descriptor)*
 

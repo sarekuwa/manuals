@@ -19,7 +19,7 @@ function cleanRepo() {
 }
 
 function manageMenu() {
-  echo "This script would reset all your repository!"
+  echo "This script will reset all your repository!"
   echo "What do you want to do?"
   echo "   1) Clean"
   echo "   2) Exit"
