@@ -18,5 +18,4 @@
 ![Qtcreator 18 My theme](img/img_theme.png)
 
 
-
 -------------------------------------------
