@@ -15,7 +15,7 @@
 ---
 
 ### My theme for Qtcreator 18 C++ 
-![Qtcreator 18 My theme](img/img_theme.png)
 
+<img src="img/img_theme.png" alt="Qtcreator 18 My theme" width="400" height="400">
 
 -------------------------------------------
