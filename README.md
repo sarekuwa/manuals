@@ -23,6 +23,6 @@
 ![VSCode terminal](img/vscode.png)
 
 ### ![Grafana transparent Node Exporter theme](main_dashboard.json)
-<img src="img/grafana.png" alt="Grafana theme" width="400" height="400">
+<img src="img/grafana_e.png" alt="Grafana theme" width="400" height="400">
 
 -------------------------------------------
