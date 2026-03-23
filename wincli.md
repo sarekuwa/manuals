@@ -69,12 +69,14 @@ To run any of these, press `Win + R`, type the command, and hit Enter. You can a
 
 
 ### Restart Win 10 Pnp device
+```powershell
 pnputil /restart-device "USB\VID_0000&PID_0003\5&202ecbb1&0&8" ; Get-PnpDevice -InstanceId "USB\VID_0000&PID_0003\5&202ecbb1&0&8" | Disable-PnpDevice -Confirm:$false -ErrorAction SilentlyContinue ; Start-Sleep 2 ; Enable-PnpDevice -InstanceId "USB\VID_0000&PID_0003\5&202ecbb1&0&8" -Confirm:$false
+```
 
 ### Windows 10 Update stop
 
 # Stop and disable services
-
+```powershell
 Stop-Service wuauserv, bits, dosvc, UsoSvc -Force
 Set-Service wuauserv -StartupType Disabled
 Set-Service bits -StartupType Disabled
@@ -88,10 +90,10 @@ Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\
 
 # Disable scheduled tasks that trigger updates
 Get-ScheduledTask -TaskPath "\Microsoft\Windows\UpdateOrchestrator\" | Disable-ScheduledTask
-
+```
 
 # Remove already installed
-
+```powershell
 Stop-Service wuauserv, bits, dosvc, UsoSvc -Force
 Remove-Item -Path "C:\Windows\SoftwareDistribution" -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -Path "C:\Windows\System32\catroot2" -Recurse -Force -ErrorAction SilentlyContinue
@@ -108,7 +110,7 @@ Get-WmiObject -Class Win32_QuickFixEngineering | Where-Object { $_.HotFixID -eq 
 
 Stop-Service wuauserv, bits, dosvc -Force
 Remove-Item -Path "C:\Windows\SoftwareDistribution" -Recurse -Force -ErrorAction SilentlyContinue
-
+```
 
 ### Remove autostartup process
 
@@ -118,6 +120,7 @@ Remove-Item -Path "C:\Windows\SoftwareDistribution" -Recurse -Force -ErrorAction
 Get-Process -Name chromium* -ErrorAction SilentlyContinue | Stop-Process -Force
 
 # Remove startup entries from Registry
+```powershell
 $regPaths = @(
     "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run",
     "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run"
@@ -127,7 +130,9 @@ foreach ($path in $regPaths) {
         Remove-ItemProperty -Path $path -Name $_.PSChildName -Force
     }
 }
-# Remove from startup folder
+```
+### Remove from startup folder
+```powershell
 $startupFolders = @(
     "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup",
     "$env:PROGRAMDATA\Microsoft\Windows\Start Menu\Programs\Startup"
@@ -135,7 +140,9 @@ $startupFolders = @(
 foreach ($folder in $startupFolders) {
     Get-ChildItem $folder -Filter "*chromium*" -ErrorAction SilentlyContinue | Remove-Item -Force
 }
-
+```
 # Disable scheduled tasks with "chromium"
+```powershell
 Get-ScheduledTask | Where-Object { $_.TaskName -like "*chromium*" } | Disable-ScheduledTask -ErrorAction SilentlyContinue
 Write-Host "Chromium startup entries removed. Reboot to apply fully." -ForegroundColor Green
+```
