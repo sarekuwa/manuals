@@ -66,3 +66,76 @@ In Windows 10, you can launch various system utilities by typing their commands 
 | `explorer` | File Explorer |
 
 To run any of these, press `Win + R`, type the command, and hit Enter. You can also use them directly in Command Prompt or PowerShell.
+
+
+### Restart Win 10 Pnp device
+pnputil /restart-device "USB\VID_0000&PID_0003\5&202ecbb1&0&8" ; Get-PnpDevice -InstanceId "USB\VID_0000&PID_0003\5&202ecbb1&0&8" | Disable-PnpDevice -Confirm:$false -ErrorAction SilentlyContinue ; Start-Sleep 2 ; Enable-PnpDevice -InstanceId "USB\VID_0000&PID_0003\5&202ecbb1&0&8" -Confirm:$false
+
+### Windows 10 Update stop
+
+# Stop and disable services
+
+Stop-Service wuauserv, bits, dosvc, UsoSvc -Force
+Set-Service wuauserv -StartupType Disabled
+Set-Service bits -StartupType Disabled
+Set-Service dosvc -StartupType Disabled
+Set-Service UsoSvc -StartupType Disabled
+
+# Block automatic updates via registry
+New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Force
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoUpdate" -Value 1 -Type DWord
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "AUOptions" -Value 1 -Type DWord
+
+# Disable scheduled tasks that trigger updates
+Get-ScheduledTask -TaskPath "\Microsoft\Windows\UpdateOrchestrator\" | Disable-ScheduledTask
+
+
+# Remove already installed
+
+Stop-Service wuauserv, bits, dosvc, UsoSvc -Force
+Remove-Item -Path "C:\Windows\SoftwareDistribution" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "C:\Windows\System32\catroot2" -Recurse -Force -ErrorAction SilentlyContinue
+Start-Service wuauserv, bits, dosvc, UsoSvc
+
+wmic qfe list brief /format:table
+
+wusa /uninstall /kb:KB1234567 /quiet /norestart
+
+DISM /Online /Cleanup-Image /RestoreHealth
+Dism /Online /Get-Packages | Select-String -Pattern "KB5066746"
+
+Get-WmiObject -Class Win32_QuickFixEngineering | Where-Object { $_.HotFixID -eq "KB890830" -or $_.HotFixID -eq "KB5066746" }
+
+Stop-Service wuauserv, bits, dosvc -Force
+Remove-Item -Path "C:\Windows\SoftwareDistribution" -Recurse -Force -ErrorAction SilentlyContinue
+
+
+### Remove autostartup process
+
+
+# Run this in PowerShell as Administrator
+# Kill any running Chromium processes
+Get-Process -Name chromium* -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# Remove startup entries from Registry
+$regPaths = @(
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run",
+    "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run"
+)
+foreach ($path in $regPaths) {
+    Get-ItemProperty -Path $path -Name "*chromium*" -ErrorAction SilentlyContinue | ForEach-Object {
+        Remove-ItemProperty -Path $path -Name $_.PSChildName -Force
+    }
+}
+# Remove from startup folder
+$startupFolders = @(
+    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup",
+    "$env:PROGRAMDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+)
+foreach ($folder in $startupFolders) {
+    Get-ChildItem $folder -Filter "*chromium*" -ErrorAction SilentlyContinue | Remove-Item -Force
+}
+
+# Disable scheduled tasks with "chromium"
+Get-ScheduledTask | Where-Object { $_.TaskName -like "*chromium*" } | Disable-ScheduledTask -ErrorAction SilentlyContinue
+Write-Host "Chromium startup entries removed. Reboot to apply fully." -ForegroundColor Green
